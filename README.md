@@ -1,9 +1,11 @@
 # StadreinigerKS
 Widget um die nächsten Abholtermine der Stadtreiniger anzuzeigen.
 
-Zwei Tage vor der nächsten Abholung wird das Datum orange. 
-
-Einen Tag vorher wird's dann rot.
+### Features
+- Zeigt die näcshten Abholtermine für die verschiedenen Abfallarten.
+- Zwei Tage vor der nächsten Abholung wird das Datum orange. 
+- Einen Tag vorher wird's dann rot.
+- Ein Klick auf das Widget führt zur Webseite der Stadtreiniger
 
 ![](widget.jpeg)
 
