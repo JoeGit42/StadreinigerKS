@@ -15,6 +15,13 @@ Das Widget benötigt eine bmsLocationId. Diese kann mit folgenden Schritten ermi
 
 ![](config.jpeg)
 
+
+### Tipps
+Die Begriffe "Restmüll", "Biotonne" und "Gelber Sack" sind die in unserer Famile gebräuchlichen Ausdrücke.
+Wenn ich das aber z.B. "Abfall", "Essensreste" und "Gelbe Tonne" nennt, so können die Bezeichnungn im Code angepasst werden.
+Hierzu einfach die Begriffe im Array "myMuell" anpassen.
+
+
 ### Known Bugs
 Es gibt leider nur ein Icon der Stadtreinierger auf hellem Hintergrund.
 Im Dunkelmodus wird daher auf ein Icon verzichtet.
