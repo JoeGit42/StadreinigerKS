@@ -39,7 +39,7 @@ const headerSubstring  = ""  // e.g. "Hauptstr. 42"; not displayed at all, if st
 const borderWidth   = 0
 const maxErrLength  = 90
   let errorStr      = ""
-const dfDayFormat   = "EEE d.MM.yyyy"
+const dfDayFormat   = "EEE dd.MM.yyyy"
 const forceDownload = false
 const appArgs       = "104242" // used in app environment, to have widget configuration 
 
