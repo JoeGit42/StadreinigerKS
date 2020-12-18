@@ -1,5 +1,6 @@
 # StadreinigerKS
-Widget um die nächsten Abholtermine der Stadtreiniger anzuzeigen
+Widget um die nächsten Abholtermine der Stadtreiniger anzuzeigen.
+Zwei Tage vor der nächsten Abholung wird das Datum orange. Einen Tag vorher wird's dann rot.
 
 ![](widget.jpeg)
 
