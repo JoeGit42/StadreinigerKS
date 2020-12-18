@@ -1,25 +1,23 @@
 # StadreinigerKS
-Widget um die möchten Abholtermine der Stadtreiniger anzuzeigen
+Widget um die nächsten Abholtermine der Stadtreiniger anzuzeigen
 
 ![](widget.jpeg)
 
 ### Konfiguration
-Das Widget benötigt die bmsLocationId. Diese kann mit folgenden Schritten ermittelt werden.
+Das Widget benötigt eine bmsLocationId. Diese kann mit folgenden Schritten ermittelt werden.
 
 1. Öffne die Webseite https://insert-it.de/BMSAbfallkalenderKassel/ 
 2. Gebe dort deine Strasse und Hausnummer ein
 3. Es erscheint nun ein Kalender
-4. In der URL (Adresszeile des Browsers) findet du nun einen Parameter ...bmsLocationId=
-5. Die dort genannte Zahl is die notwendige ID ( z.B. 104242 für den Kirchweg 17)
-6. Diese Nummer wird nun als Paremeter in der Widget-Konfiguration eingetragen
+4. In der URL (Adresszeile des Browsers) findest du einen Parameter ...bmsLocationId=
+5. Die dort genannte Zahl is die notwendige bmsLocationId (z.B. 104242 für den Kirchweg 17)
+6. Diese Nummer musst du als Paremeter in der Widget-Konfiguration eintragen
 
 ![](config.jpeg)
 
-
 ### Known Bugs
 Es gibt leider nur ein Icon der Stadtreinierger auf hellem Hintergrund.
-Dies wird nur angezeigt, wenn man sich nicht im Tagmodus befindet.
-Im Dunkelmodus wird auf ein Icon verzichtet.
+Im Dunkelmodus wird daher auf ein Icon verzichtet.
 Wer ganz auf ein Icon verzichten möchte, muss im Code faviconURL = "" setzen
 
 
