@@ -1,4 +1,4 @@
-# StadreinigerKS
+# StadtreinigerKS
 Widget um die nächsten Abholtermine der Stadtreiniger anzuzeigen.
 
 ### Features
