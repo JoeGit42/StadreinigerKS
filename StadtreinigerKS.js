@@ -64,7 +64,7 @@ const DEBUG = false
 let myMuell = [
    ["Restmüll", "console.log(6)", "abfuhrtonne_grau.png", "17.12.2020"],
    ["Biotonne", "console.log(3)", "abfuhrtonne_braun.png", "17.12.2020"],
-   ["gelber Sack", "console.log(4)", "abfuhrtonne_gelb.png", "17.12.2020"]    // last entry without comma
+   ["Gelber Sack", "console.log(4)", "abfuhrtonne_gelb.png", "17.12.2020"]    // last entry without comma
 ];
 
 
