@@ -36,3 +36,5 @@ Wer ganz auf ein Icon verzichten möchte, muss im Code faviconURL = "" setzen
 
 ### ChangeLog
 - 2020-12-18 initial version
+- 2020-12-19 ADD: Sortierung nach Datum (nächste Abholung la serster Eintrag, bei gleichem Abholdatum, gilt die Reihenfolge des Arrays)
+- 2020-12-18 ADD: In einigen Bereich, gibt es keine Biotonne, odert wird das nun auch nicht angezeigt (Alternativ kann die Anzeige aktiviert werden, dann wird als Datum "--" angezeigt) - Anpassung im Code showNotCollectedGarbage=true
