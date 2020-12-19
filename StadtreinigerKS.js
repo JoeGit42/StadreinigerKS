@@ -26,9 +26,9 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-//const muellURL      = "https://insert-it.de/BMSAbfallkalenderKassel/Main/LoadCalenderView?bmsLocationId=104242&year=2021"
 const muellURL      = "https://insert-it.de/BMSAbfallkalenderKassel/Main/LoadCalenderView?bmsLocationId=[LocationID]&year=[yyyy]"
-const imgURL        = "https://insert-it.de/BMSAbfallkalenderKassel/img/"
+//const imgURL        = "http://insert-it.de/BMSAbfallkalenderKassel/img/" // iconPath: empty / iconNames: 'abfuhrtonne_braun.png','abfuhrtonne_grau.png','abfuhrtonne_gelb.png','abfuhrtonne_blau.png'
+const imgURL        = "http://webapp.abfall-kreis-kassel.de/fileadmin/"  // icons: 'icon-fraktion-bioabfall.png','icon-fraktion-restabfall.png','icon-fraktion-gelbersack.png','icon-fraktion-papier.png'
 //const faviconURL    = "https://www.stadtreiniger.de/fileadmin/img/favicon.ico"  // only works for light white background
 const faviconURL    = ""
 const faviconDarkURL= "" // favicon_dark.png
@@ -43,12 +43,13 @@ const dfDayFormat   = "EEE dd.MM.yyyy"
 const forceDownload = false
 const sortByDate    = true
 const showNotCollectedGarbage = false
-const appArgs       = "104242" // used in app environment, to have widget configuration 
+const appArgs       = "100110" // used in app environment, to have widget configuration (2 types: 100110, 3 types: 104242, 4 types: 105242)
+const recYear       = "year="
+const recMonth      = "bg-danger"
+const recDay        = "tableDay"
 
 //
 const S_STACK_WIDTH = 150
-const LOGO_SIZE     = 35
-const FAVICON_SIZE  = 16
 const WRONG_YEAR    = 1973
 const REFRESH       = (2* 60 * 60 * 1000)  // 4 hours
 
@@ -63,12 +64,21 @@ const DEBUG = false
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // my muell
-// ["text", "ID", "Icon"],
 let myMuell = [
-   { title: 'Biotonne',    rec: 'console.log(3)', icon: 'abfuhrtonne_braun.png', date: new Date (1942, 4, 2) },   
-   { title: 'Restmüll',    rec: 'console.log(6)', icon: 'abfuhrtonne_grau.png',  date: new Date (1942, 4, 2) } ,
-   { title: 'Gelber Sack', rec: 'console.log(4)', icon: 'abfuhrtonne_gelb.png',  date: new Date (1942, 4, 2) }    // last entry without comma
+   { title: 'Biotonne',    rec: 'console.log(3)', iconPath: 'webapp/images/', iconName: 'icon-fraktion-bioabfall.png',   date: new Date (1942, 4, 2) },   
+   { title: 'Restmüll',    rec: 'console.log(6)', iconPath: 'user_upload/',   iconName: 'icon-fraktion-restabfall.png',  date: new Date (1942, 4, 2) },
+   { title: 'Gelber Sack', rec: 'console.log(4)', iconPath: 'webapp/images/', iconName: 'icon-fraktion-gelbersack.png',  date: new Date (1942, 4, 2) },    
+   { title: 'Altpapier',   rec: 'console.log(1)', iconPath: 'webapp/images/', iconName: 'icon-fraktion-papier.png',      date: new Date (1942, 4, 2) }    // last entry without comma
 ];
+
+// layout
+let layout = [
+  {cnt: 1, spaceAfterHeader:26, spaceAfterEntry:24, logoSize:35, fontSizeEntry:13, fontSizeHeader:16},
+  {cnt: 2, spaceAfterHeader:16, spaceAfterEntry:14, logoSize:35, fontSizeEntry:13, fontSizeHeader:16},
+  {cnt: 3, spaceAfterHeader: 6, spaceAfterEntry: 4, logoSize:35, fontSizeEntry:13, fontSizeHeader:16},
+  {cnt: 4, spaceAfterHeader: 1, spaceAfterEntry: 2, logoSize:30, fontSizeEntry:12, fontSizeHeader:14}
+];
+let layoutIndex = -1
 
 sortMuell = function(elm1, elm2) {
   // special handling for unknown dates - means this kind of garbage is not supported in this area
@@ -101,7 +111,6 @@ async function createWidget(items) {
     let dataNextYear  = ""
     let i = 0
     let msgLine
-    let addSpacer = 0
 
   const list = new ListWidget()
   list.refreshAfterDate = new Date(Date.now() + (REFRESH)) 
@@ -167,9 +176,9 @@ async function createWidget(items) {
     for (i=0; i<myMuell.length; i++) {
       if ( myMuell[i].date.getFullYear() == WRONG_YEAR ) { myMuell.splice(i, 1) }
     }
-    // some more space in layout, if less than 3 entries
-    addSpacer = (3 - myMuell.length) * 10
   }
+  
+  layoutIndex = minmax(myMuell.length -1, 0, layout.length)
   
   // sort array by date
   if ( sortByDate ) {
@@ -178,9 +187,9 @@ async function createWidget(items) {
   
   // ##Headline
   let headerStack = addStackWithOptions(list, stackWidth, 0, borderWidth, Color.red(), false)
-//   printSFSymbol(headerStack, "arrow.3.trianglepath", 16)  
+//   printSFSymbol(headerStack, "arrow.3.trianglepath", layout[layoutIndex].fontSizeHeader)  
   let headerLine = headerStack.addText(headerString)
-  headerLine.font = Font.boldSystemFont(16)
+  headerLine.font = Font.boldSystemFont(layout[layoutIndex].fontSizeHeader)
   headerLine.textColor = Color.orange()
   if ( headerSubstring.length > 0) {
     headerStack = addStackWithOptions(list, stackWidth, 0, borderWidth, Color.red(), false)
@@ -192,17 +201,17 @@ async function createWidget(items) {
   // add icon in the upper right corner
   if (Device.isUsingDarkAppearance()) {
     if (faviconDarkURL.length > 0) { 
-      addFavicon(headerStack, faviconDarkURL, localFaviconDark)  // dark icon (not available now)
+      await addFavicon(headerStack, faviconDarkURL, localFaviconDark);  // dark icon (not available now)
       headerLine.text += " " // add space between headertext and icon
     }    
   } else {
     if (faviconURL.length > 0) { 
-      addFavicon(headerStack, faviconURL, localFavicon) // standard icon with white background
+      await addFavicon(headerStack, faviconURL, localFavicon); // standard icon with white background
       headerLine.text += " "  // add space between headertext and icon
     } 
   }
 
-  list.addSpacer(6+addSpacer)
+  list.addSpacer(layout[layoutIndex].spaceAfterHeader)
    
   // ##three lines for each type of garbage (Restmüll, Biotonne, Gelber Sack/Tonne)
   let listStack = addStackWithOptions(list, stackWidth, 0, borderWidth, Color.green(), false)
@@ -213,9 +222,11 @@ async function createWidget(items) {
   let iconColRowStack
   iconColStack.layoutVertically()
   for (i=0; i<myMuell.length; i++) {
-    iconColRowStack = addStackWithOptions(iconColStack, 45, LOGO_SIZE + 2, borderWidth, Color.yellow(), false)
-    addLogo(iconColRowStack, myMuell[i].icon)
-    iconColStack.addSpacer(3+addSpacer) 
+    iconColRowStack = addStackWithOptions(iconColStack, 50, layout[layoutIndex].logoSize, borderWidth, Color.yellow(), false)
+    iconColRowStack.addSpacer(9)
+    await addLogo(iconColRowStack, myMuell[i].iconPath, myMuell[i].iconName)
+    iconColRowStack.addSpacer()
+    iconColStack.addSpacer(layout[layoutIndex].spaceAfterEntry) 
   }
   
   // text + date column
@@ -225,19 +236,19 @@ async function createWidget(items) {
   let dateColRowStack
   dateColStack.layoutVertically()
   for (i=0; i<myMuell.length; i++) {
-      dateColRowStack = addStackWithOptions(dateColStack, 100, iconColRowStack.size.height, borderWidth, Color.orange(), true)
+      dateColRowStack = addStackWithOptions(dateColStack, 105, iconColRowStack.size.height, borderWidth, Color.orange(), true)
       dateColLineRight = dateColRowStack.addText("" + myMuell[i].title  )
-      dateColLineRight.font = Font.regularSystemFont(13)
+      dateColLineRight.font = Font.regularSystemFont(layout[layoutIndex].fontSizeEntry)
       if ( myMuell[i].date.getFullYear() != WRONG_YEAR ) { 
         dateColLineRight = dateColRowStack.addText("" + dfDate.string( myMuell[i].date ) )
       } else {
         dateColLineRight = dateColRowStack.addText("--")
       }      
       if ( dateColLineRight.text.indexOf(".") == 2 ) { dateColLineRight.text = dateColLineRight.text.replace(".", ",") }  // replace point after short weekday with comma
-      dateColLineRight.font = Font.boldSystemFont(13)  
+      dateColLineRight.font = Font.boldSystemFont(layout[layoutIndex].fontSizeEntry)  
       if ( dateDiffInDays(today, myMuell[i].date ) <= 1) { dateColLineRight.textColor = Color.red() }
       if ( dateDiffInDays(today, myMuell[i].date ) == 2) { dateColLineRight.textColor = Color.orange() } 
-      dateColStack.addSpacer(3+addSpacer) 
+      dateColStack.addSpacer(layout[layoutIndex].spaceAfterEntry) 
   }
   
   return list
@@ -283,7 +294,7 @@ function getDate4Muell(page, ID) {
   let posID = -1
 
   // get the year
-  posID = webpagePart.indexOf("year=")
+  posID = webpagePart.indexOf(recYear)
   if (posID > 0) {
     webpagePart = webpagePart.substring(posID)
     year = get1stNumber(webpagePart)
@@ -296,7 +307,7 @@ function getDate4Muell(page, ID) {
   if (posID > 0) {
     // get the month
     webpagePart = webpagePart.substring(0, posID)
-    posID = webpagePart.lastIndexOf("bg-danger")
+    posID = webpagePart.lastIndexOf(recMonth)
     if (posID > 0) {
       webpagePart = webpagePart.substring(posID)
       month = searchMonth(webpagePart)
@@ -304,7 +315,7 @@ function getDate4Muell(page, ID) {
   }
     
   // get the day
-  posID = webpagePart.lastIndexOf("tableDay")
+  posID = webpagePart.lastIndexOf(recDay)
   if (posID > 0) {
     webpagePart = webpagePart.substring(posID)
     day = get1stNumber(webpagePart)
@@ -371,11 +382,11 @@ async function fetchData(loc, year) {
   }
 }
 
-async function addLogo(stack, logo) {
-  const imageUrl = imgURL + logo 
+async function addLogo(stack, logoPath, logoName) {
+  let imageUrl = imgURL + logoPath + logoName 
   let fm = FileManager.local()
   let dir = fm.documentsDirectory()
-  let path = fm.joinPath(dir, logo)
+  let path = fm.joinPath(dir, logoName)
   let logoImage
   let stackImage
   
@@ -388,7 +399,8 @@ async function addLogo(stack, logo) {
   }
 
   stackImage = stack.addImage(logoImage)
-  stackImage.imageSize = new Size(LOGO_SIZE, LOGO_SIZE)
+  stackImage.leftAlignImage()
+  stackImage.imageSize = new Size(layout[layoutIndex].logoSize, layout[layoutIndex].logoSize)
 }
 
 async function addFavicon(stack, iconURL, localIcon) {
@@ -403,7 +415,7 @@ async function addFavicon(stack, iconURL, localIcon) {
   } else {
     // download once
     try{
-      iconImage = loadWebImage(iconURL);
+      iconImage = await loadWebImage(iconURL);
       fm.writeImage(path, iconImage);
     } catch (err) {
     }
@@ -411,7 +423,7 @@ async function addFavicon(stack, iconURL, localIcon) {
 
   stackImage = stack.addImage(iconImage)
   stackImage.rightAlignImage()
-  stackImage.imageSize = new Size(FAVICON_SIZE, FAVICON_SIZE)
+  stackImage.imageSize = new Size(layout[layoutIndex].fontSizeHeader, layout[layoutIndex].fontSizeHeader)
 }
 
 
@@ -423,13 +435,8 @@ function dfCreateAndInit (format) {
 }
 
 async function loadWebImage(imgUrl) {
-    const req = new Request(imgUrl)
-              
-    try {
-      let returnImage = req.loadImage();
-    } catch (err) {
-    }
-    return returnImage
+  let req = new Request(imgUrl)
+  return await req.loadImage()
 }
 
 // parses the widget parameters
