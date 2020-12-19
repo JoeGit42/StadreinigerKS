@@ -29,8 +29,8 @@
 //const muellURL      = "https://insert-it.de/BMSAbfallkalenderKassel/Main/LoadCalenderView?bmsLocationId=104242&year=2021"
 const muellURL      = "https://insert-it.de/BMSAbfallkalenderKassel/Main/LoadCalenderView?bmsLocationId=[LocationID]&year=[yyyy]"
 const imgURL        = "https://insert-it.de/BMSAbfallkalenderKassel/img/"
-const faviconURL    = "https://www.stadtreiniger.de/fileadmin/img/favicon.ico"  // only works for light white background
-//const faviconURL    = ""
+//const faviconURL    = "https://www.stadtreiniger.de/fileadmin/img/favicon.ico"  // only works for light white background
+const faviconURL    = ""
 const faviconDarkURL= "" // favicon_dark.png
 const widgetURL     = "https://www.stadtreiniger.de"
   let headerString  = "Stadtreiniger" 
@@ -41,6 +41,8 @@ const maxErrLength  = 90
   let errorStr      = ""
 const dfDayFormat   = "EEE dd.MM.yyyy"
 const forceDownload = false
+const sortByDate    = true
+const showNotCollectedGarbage = false
 const appArgs       = "104242" // used in app environment, to have widget configuration 
 
 //
@@ -48,6 +50,7 @@ const S_STACK_WIDTH = 150
 const LOGO_SIZE     = 35
 const FAVICON_SIZE  = 16
 const WRONG_YEAR    = 1973
+const REFRESH       = (2* 60 * 60 * 1000)  // 4 hours
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // DEBUG-CONFIG - DON'T TOUCH THIS
@@ -60,13 +63,26 @@ const DEBUG = false
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // my muell
-// ["label", "ID", "Icon"],
+// ["text", "ID", "Icon"],
 let myMuell = [
-   ["Restmüll", "console.log(6)", "abfuhrtonne_grau.png", "17.12.2020"],
-   ["Biotonne", "console.log(3)", "abfuhrtonne_braun.png", "17.12.2020"],
-   ["Gelber Sack", "console.log(4)", "abfuhrtonne_gelb.png", "17.12.2020"]    // last entry without comma
+   { title: 'Biotonne',    rec: 'console.log(3)', icon: 'abfuhrtonne_braun.png', date: new Date (1942, 4, 2) },   
+   { title: 'Restmüll',    rec: 'console.log(6)', icon: 'abfuhrtonne_grau.png',  date: new Date (1942, 4, 2) } ,
+   { title: 'Gelber Sack', rec: 'console.log(4)', icon: 'abfuhrtonne_gelb.png',  date: new Date (1942, 4, 2) }    // last entry without comma
 ];
 
+sortMuell = function(elm1, elm2) {
+  // special handling for unknown dates - means this kind of garbage is not supported in this area
+  // so it can be displayed at the end
+  if (elm1.date.getFullYear() == WRONG_YEAR) {
+    return 1;
+  } else if (elm2.date.getFullYear() == WRONG_YEAR) {
+    return -1;
+  } else if (elm1.date > elm2.date){
+    return 1
+  } else if (elm1.date < elm2.date) {
+    return -1
+  } else return 0;
+}
 
 let widget = await createWidget()
 if (!config.runsInWidget) await widget.presentSmall()
@@ -74,23 +90,21 @@ Script.setWidget(widget)
 Script.complete()
 
 async function createWidget(items) {
-const dfDate = dfCreateAndInit(dfDayFormat)
-const localFavicon = "stadtreiniger_favicon.ico"
-const localFaviconDark = "stadtreiniger_favicon_dark.png"
-  let stackWidth = S_STACK_WIDTH
-  let tempStr
-  let today = new Date()
-  let thisYear = today.getFullYear()
-  let dataThisYear  = ""
-  let dataNextYear  = ""
-  let date
-  let i = 0
-  let msgLine
-
-
+  const dfDate = dfCreateAndInit(dfDayFormat)
+  const localFavicon = "stadtreiniger_favicon.ico"
+  const localFaviconDark = "stadtreiniger_favicon_dark.png"
+    let stackWidth = S_STACK_WIDTH
+    let tempStr
+    let today = new Date()
+    let thisYear = today.getFullYear()
+    let dataThisYear  = ""
+    let dataNextYear  = ""
+    let i = 0
+    let msgLine
+    let addSpacer = 0
 
   const list = new ListWidget()
-  list.refreshAfterDate = new Date(Date.now() + (1800 * 1000)) // refresh after 30 min
+  list.refreshAfterDate = new Date(Date.now() + (REFRESH)) 
   list.setPadding(0,0,0,0)
   list.addSpacer(2)
   list.url = widgetURL
@@ -133,16 +147,33 @@ const localFaviconDark = "stadtreiniger_favicon_dark.png"
   
   // fill array with correct dates
   for (i=0; i<myMuell.length; i++) {
-    date = getDate4MuellComplete(dataThisYear, dataNextYear, myMuell[i][1])
-    myMuell[i][3] = date.toString()
+    myMuell[i].date = getDate4MuellComplete(dataThisYear, dataNextYear, myMuell[i].rec)
+    // 2nd level sort (used by equal dates) is done in the order, which is defined by original array structure
+    // to enable this, the hour of date is manipulated
+    myMuell[i].date.setHours(i)
   }
-
+  
+  // data not fetched from web
   if (dataThisYear.length <= maxErrLength) {
     list.addText("⚠︎ Stadtreiniger")
     list.addText("     nicht")
     list.addText("     erreichbar!")
     list.addText(dataThisYear)  // it's an error message 
     return list
+  }
+  
+  // delete entries, which are not supported in this area
+  if ( !showNotCollectedGarbage ) {
+    for (i=0; i<myMuell.length; i++) {
+      if ( myMuell[i].date.getFullYear() == WRONG_YEAR ) { myMuell.splice(i, 1) }
+    }
+    // some more space in layout, if less than 3 entries
+    addSpacer = (3 - myMuell.length) * 10
+  }
+  
+  // sort array by date
+  if ( sortByDate ) {
+    myMuell = myMuell.sort(sortMuell)
   }
   
   // ##Headline
@@ -171,7 +202,7 @@ const localFaviconDark = "stadtreiniger_favicon_dark.png"
     } 
   }
 
-  list.addSpacer(6)
+  list.addSpacer(6+addSpacer)
    
   // ##three lines for each type of garbage (Restmüll, Biotonne, Gelber Sack/Tonne)
   let listStack = addStackWithOptions(list, stackWidth, 0, borderWidth, Color.green(), false)
@@ -183,11 +214,11 @@ const localFaviconDark = "stadtreiniger_favicon_dark.png"
   iconColStack.layoutVertically()
   for (i=0; i<myMuell.length; i++) {
     iconColRowStack = addStackWithOptions(iconColStack, 45, LOGO_SIZE + 2, borderWidth, Color.yellow(), false)
-    addLogo(iconColRowStack, myMuell[i][2])
-    iconColStack.addSpacer(3) 
+    addLogo(iconColRowStack, myMuell[i].icon)
+    iconColStack.addSpacer(3+addSpacer) 
   }
   
-  // label + date column
+  // text + date column
   //let dateColStack = addStackWithOptions(listStack, 100, 0, borderWidth, Color.yellow(), false)
   let dateColStack = listStack.addStack()
   let dateColLineRight
@@ -195,13 +226,18 @@ const localFaviconDark = "stadtreiniger_favicon_dark.png"
   dateColStack.layoutVertically()
   for (i=0; i<myMuell.length; i++) {
       dateColRowStack = addStackWithOptions(dateColStack, 100, iconColRowStack.size.height, borderWidth, Color.orange(), true)
-      dateColLineRight = dateColRowStack.addText("" + myMuell[i][0]  )
-      dateColLineRight.font = Font.regularSystemFont(13)  
-      dateColLineRight = dateColRowStack.addText("" + dfDate.string( new Date(myMuell[i][3]) ) )
+      dateColLineRight = dateColRowStack.addText("" + myMuell[i].title  )
+      dateColLineRight.font = Font.regularSystemFont(13)
+      if ( myMuell[i].date.getFullYear() != WRONG_YEAR ) { 
+        dateColLineRight = dateColRowStack.addText("" + dfDate.string( myMuell[i].date ) )
+      } else {
+        dateColLineRight = dateColRowStack.addText("--")
+      }      
+      if ( dateColLineRight.text.indexOf(".") == 2 ) { dateColLineRight.text = dateColLineRight.text.replace(".", ",") }  // replace point after short weekday with comma
       dateColLineRight.font = Font.boldSystemFont(13)  
-      if ( dateDiffInDays(today, new Date(myMuell[i][3]) ) == 1 || dateDiffInDays(today, new Date(myMuell[i][3]) ) == 0) { dateColLineRight.textColor = Color.red() }
-      if ( dateDiffInDays(today, new Date(myMuell[i][3]) ) == 2) { dateColLineRight.textColor = Color.orange() } 
-      dateColStack.addSpacer(3) 
+      if ( dateDiffInDays(today, myMuell[i].date ) <= 1) { dateColLineRight.textColor = Color.red() }
+      if ( dateDiffInDays(today, myMuell[i].date ) == 2) { dateColLineRight.textColor = Color.orange() } 
+      dateColStack.addSpacer(3+addSpacer) 
   }
   
   return list
@@ -226,7 +262,7 @@ function printSFSymbol(stack, symbolStr, width) {
   mobileIconElement.imageSize = new Size(width, width)
   mobileIconElement.tintColor =  Color.orange()
 }
-
+    
 function getDate4MuellComplete(thisYear, nextYear, ID) {
   let date
   const dfDate = dfCreateAndInit(dfDayFormat)
@@ -240,7 +276,7 @@ function getDate4MuellComplete(thisYear, nextYear, ID) {
 
 function getDate4Muell(page, ID) {
   let webpagePart = page
-  let date = new Date(WRONG_YEAR, 4, 2)
+  let date = new Date(WRONG_YEAR, 1, 4)
   let year = WRONG_YEAR
   let month = -1
   let day = -1
