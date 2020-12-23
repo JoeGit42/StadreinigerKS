@@ -40,5 +40,8 @@ Wer ganz auf ein Icon verzichten möchte, muss im Code faviconURL = "" setzen
 - 2020-12-19 ADD: In einigen Bereich, gibt es keine Biotonne, dann wird das nun auch nicht angezeigt (Alternativ kann die Anzeige aktiviert werden, dann wird als Datum "--" angezeigt) - Anpassung im Code showNotCollectedGarbage=true
 - 2020-12-19 ADD: Unterstützung des Altpapiertonne
 - 2020-12-19 ADD: Flexiblere Layoutgestaltung, angepasst auf die Anzahl der dargestellten Einträge (2-4)
-- 2020-12-19 ADD: neue Icons vom Abfallkalender Kreis Kassel
-- 2020-12-19 FIX: kleinere Anpassungen
+- 2020-12-19 ADD: Neue Icons vom Abfallkalender Kreis Kassel
+- 2020-12-19 FIX: Kleinere Anpassungen
+- 2020-12-23 CHG: Gelber Sack wird Gelbe Tonne
+- 2020-12-23 CHG: Refresh Verhalten geändert.
+- 2020-12-23 CHG: Widget URL führt jetzt direkt zum entsprechenden Abfallkalender (StreetID kann übergeben werden, um dies zu optimieren, funktioneirt aber auch ohne)
