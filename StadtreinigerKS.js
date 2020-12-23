@@ -27,15 +27,15 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 const muellURL      = "https://insert-it.de/BMSAbfallkalenderKassel/Main/LoadCalenderView?bmsLocationId=[LocationID]&year=[yyyy]"
-//const imgURL        = "http://insert-it.de/BMSAbfallkalenderKassel/img/" // iconPath: empty / iconNames: 'abfuhrtonne_braun.png','abfuhrtonne_grau.png','abfuhrtonne_gelb.png','abfuhrtonne_blau.png'
-const imgURL        = "http://webapp.abfall-kreis-kassel.de/fileadmin/"  // icons: 'icon-fraktion-bioabfall.png','icon-fraktion-restabfall.png','icon-fraktion-gelbersack.png','icon-fraktion-papier.png'
 //const faviconURL    = "https://www.stadtreiniger.de/fileadmin/img/favicon.ico"  // only works for light white background
 const faviconURL    = ""
 const faviconDarkURL= "" // favicon_dark.png
-const widgetURL     = "https://www.stadtreiniger.de"
+//const widgetURL     = "https://www.stadtreiniger.de"
+  let widgetURL     = "https://insert-it.de/BMSAbfallkalenderKassel?bmsStreetId=[StreetID]&bmsLocationId=[LocationID]&year=[yyyy]"
   let headerString  = "Stadtreiniger" 
 const headerSubstring  = ""  // e.g. "Hauptstr. 42"; not displayed at all, if string is ""
   let locationID    = ""
+  let streetID      = ""
 const borderWidth   = 0
 const maxErrLength  = 90
   let errorStr      = ""
@@ -51,7 +51,11 @@ const recDay        = "tableDay"
 //
 const S_STACK_WIDTH = 150
 const WRONG_YEAR    = 1973
-const REFRESH       = (2* 60 * 60 * 1000)  // 4 hours
+
+// Refresh
+const REFRESH_TIME = "00:00"  // widget will be refreshed this time next day. (or not earlier than that)
+const REFRESH_OFFSET_MIN = 30 // seconds
+const REFRESH_OFFSET_MAX = 180// seconds
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // DEBUG-CONFIG - DON'T TOUCH THIS
@@ -64,17 +68,27 @@ const DEBUG = false
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // my muell
+
 let myMuell = [
-   { title: 'Biotonne',    rec: 'console.log(3)', iconPath: 'webapp/images/', iconName: 'icon-fraktion-bioabfall.png',   date: new Date (1942, 4, 2) },   
-   { title: 'Restmüll',    rec: 'console.log(6)', iconPath: 'user_upload/',   iconName: 'icon-fraktion-restabfall.png',  date: new Date (1942, 4, 2) },
-   { title: 'Gelber Sack', rec: 'console.log(4)', iconPath: 'webapp/images/', iconName: 'icon-fraktion-gelbersack.png',  date: new Date (1942, 4, 2) },    
-   { title: 'Altpapier',   rec: 'console.log(1)', iconPath: 'webapp/images/', iconName: 'icon-fraktion-papier.png',      date: new Date (1942, 4, 2) }    // last entry without comma
+   { title: 'Biotonne',    rec: 'console.log(3)', iconPath: 'http://webapp.abfall-kreis-kassel.de/fileadmin/webapp/images/',      iconName: 'icon-fraktion-bioabfall.png',        date: new Date (1942, 4, 2) },   
+   { title: 'Restmüll',    rec: 'console.log(6)', iconPath: 'http://webapp.abfall-kreis-kassel.de/fileadmin/user_upload/',        iconName: 'icon-fraktion-restabfall.png',       date: new Date (1942, 4, 2) },
+   { title: 'Gelbe Tonne', rec: 'console.log(4)', iconPath: 'https://raw.githubusercontent.com/JoeGit42/StadtreinigerKS/main/',   iconName: 'icon-fraktion-gelbetonne_temp.png',  date: new Date (1942, 4, 2) },    
+   { title: 'Altpapier',   rec: 'console.log(1)', iconPath: 'http://webapp.abfall-kreis-kassel.de/fileadmin/webapp/images/',      iconName: 'icon-fraktion-papier.png',           date: new Date (1942, 4, 2) }    // last entry without comma
 ];
+// my muell (old iconset)
+/*
+let myMuell = [ 
+   { title: 'Biotonne',    rec: 'console.log(3)', iconPath: 'http://insert-it.de/BMSAbfallkalenderKassel/img/', iconName: 'abfuhrtonne_braun.png', date: new Date (1942, 4, 2) },   
+   { title: 'Restmüll',    rec: 'console.log(6)', iconPath: 'http://insert-it.de/BMSAbfallkalenderKassel/img/', iconName: 'abfuhrtonne_grau.png',  date: new Date (1942, 4, 2) },
+   { title: 'Gelber Sack', rec: 'console.log(4)', iconPath: 'http://insert-it.de/BMSAbfallkalenderKassel/img/', iconName: 'abfuhrtonne_gelb.png',  date: new Date (1942, 4, 2) },    
+   { title: 'Altpapier',   rec: 'console.log(1)', iconPath: 'http://insert-it.de/BMSAbfallkalenderKassel/img/', iconName: 'abfuhrtonne_blau.png',  date: new Date (1942, 4, 2) }    // last entry without comma
+];
+*/
 
 // layout
 let layout = [
-  {cnt: 1, spaceAfterHeader:26, spaceAfterEntry:24, logoSize:35, fontSizeEntry:13, fontSizeHeader:16},
-  {cnt: 2, spaceAfterHeader:16, spaceAfterEntry:14, logoSize:35, fontSizeEntry:13, fontSizeHeader:16},
+  {cnt: 1, spaceAfterHeader:26, spaceAfterEntry:24, logoSize:35, fontSizeEntry:13, fontSizeHeader:18},
+  {cnt: 2, spaceAfterHeader:16, spaceAfterEntry:14, logoSize:35, fontSizeEntry:13, fontSizeHeader:18},
   {cnt: 3, spaceAfterHeader: 6, spaceAfterEntry: 4, logoSize:35, fontSizeEntry:13, fontSizeHeader:16},
   {cnt: 4, spaceAfterHeader: 1, spaceAfterEntry: 2, logoSize:30, fontSizeEntry:12, fontSizeHeader:14}
 ];
@@ -113,11 +127,9 @@ async function createWidget(items) {
     let msgLine
 
   const list = new ListWidget()
-  list.refreshAfterDate = new Date(Date.now() + (REFRESH)) 
   list.setPadding(0,0,0,0)
   list.addSpacer(2)
-  list.url = widgetURL
-
+  
   // DEBUG init
   if (DEBUG) {
     debugRow = list.addStack()
@@ -127,8 +139,14 @@ async function createWidget(items) {
   // DEBUG_END
 
   let parCount = parseInput(args.widgetParameter)
+
+  // Set widget URL
+  widgetURL = widgetURL.replace("[LocationID]", locationID)
+  widgetURL = widgetURL.replace("[StreetID]", streetID)
+  widgetURL = widgetURL.replace("[yyyy]", (today.getMonth()==11) ? thisYear+1 : thisYear)
+  list.url = widgetURL
   
-  if (parCount != 1) {
+  if (parCount < 1) {
     msgLine = list.addText("⚠︎ Missing bmsLocationId")
     msgLine.font = Font.mediumSystemFont(11)
     msgLine = list.addText("     as widget-parameter")
@@ -251,6 +269,9 @@ async function createWidget(items) {
       dateColStack.addSpacer(layout[layoutIndex].spaceAfterEntry) 
   }
   
+  // refresh next day early in the morning
+  list.refreshAfterDate = getRefreshDate(REFRESH_TIME, REFRESH_OFFSET_MIN, REFRESH_OFFSET_MAX)
+
   return list
 }
 
@@ -356,6 +377,20 @@ function dateDiffInDays (d1, d2) {
   return diffDays 
 }
 
+function getRefreshDate (rTimeStr, minOffsetSec, maxOffsetSec) {
+  // set tomorrow
+  const d = new Date()
+  let rDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)
+  
+  // in the early morning
+  let rtime = rTimeStr.split(":")
+  rDate.setHours(rtime[0])
+  rDate.setMinutes(rtime[1])
+  rDate.setSeconds(getRandomArbitrary(minOffsetSec, maxOffsetSec))
+  
+  return rDate
+}
+
 async function fetchData(loc, year) {
   let apiURL = muellURL
   let errorStr = ""
@@ -383,7 +418,7 @@ async function fetchData(loc, year) {
 }
 
 async function addLogo(stack, logoPath, logoName) {
-  let imageUrl = imgURL + logoPath + logoName 
+  let imageUrl = logoPath + logoName 
   let fm = FileManager.local()
   let dir = fm.documentsDirectory()
   let path = fm.joinPath(dir, logoName)
@@ -453,9 +488,17 @@ function parseInput(input) {
     wParameter = input.split(",")
     let parCount = wParameter.length
     
-    for (i=0; i < parCount; i++) {
-      locationID = wParameter[i].trim()
-    } 
+    if (parCount > 0) { locationID = wParameter[0].trim() }
+    if (parCount > 1) { 
+      streetID = wParameter[1].trim() 
+      if ( parseInt(locationID) < parseInt(streetID)) {
+        // Oh, streetID was given as 1st parameter -> change order
+        streetID   = wParameter[0].trim()
+        locationID = wParameter[1].trim()
+      }
+    }
+    
+
     
     return wParameter.length
   } 
@@ -465,5 +508,10 @@ function parseInput(input) {
 function minmax(num, min, max){
   return Math.min(Math.max(num, min), max)
 }
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
 
 //EOF
