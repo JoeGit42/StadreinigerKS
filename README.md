@@ -45,3 +45,4 @@ Wer ganz auf ein Icon verzichten möchte, muss im Code faviconURL = "" setzen
 - 2020-12-23 CHG: Gelber Sack wird Gelbe Tonne
 - 2020-12-23 CHG: Refresh Verhalten geändert.
 - 2020-12-23 CHG: Widget URL führt jetzt direkt zum entsprechenden Abfallkalender (StreetID kann übergeben werden, um dies zu optimieren, funktioniert aber auch ohne)
+- 2021-02-20 FIX: Abholdaten im März werden nun korrekt erkannt.
