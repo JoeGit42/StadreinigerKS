@@ -191,7 +191,7 @@ async function createWidget(items) {
   
   // delete entries, which are not supported in this area
   if ( !showNotCollectedGarbage ) {
-    for (i=0; i<myMuell.length; i++) {
+    for (i = myMuell.length - 1; i>=0; i--) {
       if ( myMuell[i].date.getFullYear() == WRONG_YEAR ) { myMuell.splice(i, 1) }
     }
   }
@@ -358,11 +358,15 @@ function get1stNumber (string) {
 }
 
 function searchMonth (string) {
-  const month = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ];
+  const month = ["Januar", "Februar", "März", "M&#xE4;rz", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ];
  
   for (i=0; i<month.length; i++) {
     if ( string.indexOf(month[i]) > 0 ){
-      return i
+      if (i<3) {
+        return i
+      } else { 
+        return i-1
+      }
     }
   }
   return -1
